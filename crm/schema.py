@@ -1,24 +1,36 @@
+import re
 import graphene
-from graphene_django import DjangoObjectType
-from .models import Customer, Product, Order
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
-import re
+from graphene_django.types import DjangoObjectType
+from graphene_django.filter import DjangoFilterConnectionField
+from .models import Customer, Product, Order
+from .filters import CustomerFilter, ProductFilter, OrderFilter
 
-# --- Object Types ---
+# ---------------------------
+# Object Types
+# ---------------------------
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
+        interfaces = (graphene.relay.Node,)
 
 class ProductType(DjangoObjectType):
     class Meta:
         model = Product
+        interfaces = (graphene.relay.Node,)
 
 class OrderType(DjangoObjectType):
     class Meta:
         model = Order
+        interfaces = (graphene.relay.Node,)
 
+
+# ---------------------------
+# Mutations
+# ---------------------------
+# Create Customer
 class CreateCustomer(graphene.Mutation):
     customer = graphene.Field(CustomerType)
     message = graphene.String()
@@ -32,7 +44,6 @@ class CreateCustomer(graphene.Mutation):
         if Customer.objects.filter(email=email).exists():
             raise ValidationError("Email already exists")
         
-        # Optional phone validation
         if phone:
             pattern = r'^(\+\d{10,15}|\d{3}-\d{3}-\d{4})$'
             if not re.match(pattern, phone):
@@ -43,6 +54,7 @@ class CreateCustomer(graphene.Mutation):
         return CreateCustomer(customer=customer, message="Customer created successfully!")
 
 
+# Bulk Create Customers
 class CustomerInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     email = graphene.String(required=True)
@@ -81,6 +93,7 @@ class BulkCreateCustomers(graphene.Mutation):
         return BulkCreateCustomers(customers=created_customers, errors=errors)
 
 
+# Create Product
 class CreateProduct(graphene.Mutation):
     product = graphene.Field(ProductType)
 
@@ -100,6 +113,7 @@ class CreateProduct(graphene.Mutation):
         return CreateProduct(product=product)
 
 
+# Create Order
 class CreateOrder(graphene.Mutation):
     order = graphene.Field(OrderType)
 
@@ -128,8 +142,21 @@ class CreateOrder(graphene.Mutation):
 
         return CreateOrder(order=order)
 
+
+# ---------------------------
+# Mutation Class
+# ---------------------------
 class Mutation(graphene.ObjectType):
     create_customer = CreateCustomer.Field()
     bulk_create_customers = BulkCreateCustomers.Field()
     create_product = CreateProduct.Field()
     create_order = CreateOrder.Field()
+
+
+# ---------------------------
+# Query with Filters
+# ---------------------------
+class Query(graphene.ObjectType):
+    all_customers = DjangoFilterConnectionField(CustomerType, filterset_class=CustomerFilter)
+    all_products = DjangoFilterConnectionField(ProductType, filterset_class=ProductFilter)
+    all_orders = DjangoFilterConnectionField(OrderType, filterset_class=OrderFilter)
