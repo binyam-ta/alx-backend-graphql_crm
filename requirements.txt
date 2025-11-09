@@ -6,3 +6,4 @@ graphene-django>=3.2
 celery>=5.5
 django-celery-beat>=2.5
 redis>=5.0
+gunicorn==22.1.0
