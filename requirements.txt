@@ -3,3 +3,6 @@ gql>=3.0.0
 requests>=2.31
 django-crontab>=0.7.0
 graphene-django>=3.2
+celery>=5.5
+django-celery-beat>=2.5
+redis>=5.0
