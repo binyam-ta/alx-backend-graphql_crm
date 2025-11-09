@@ -19,6 +19,8 @@ from datetime import timedelta
 cutoff_date = timezone.now() - timedelta(days=365)
 deleted_count, _ = Customer.objects.filter(order__isnull=True, created_at__lt=cutoff_date).delete()
 
+print(deleted_count) 
+
 with open("/tmp/customer_cleanup_log.txt", "a") as log:
     log.write(f"{timezone.now()} - Deleted {deleted_count} inactive customers.\n")
 EOF
