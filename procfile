@@ -1,0 +1,3 @@
+web: gunicorn alx_backend_graphql_crm.wsgi --log-file -
+worker: celery -A crm worker -l info
+beat: celery -A crm beat -l info
